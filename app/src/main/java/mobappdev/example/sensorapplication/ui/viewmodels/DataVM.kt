@@ -35,6 +35,7 @@ class DataVM @Inject constructor(
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
     private val accDataFlow = internalSensorController.currentLinAccUI
+    private val accDataFlowForeign = polarController.currentAcc
     private val hrDataFlow = polarController.currentHR
 
 
@@ -50,13 +51,16 @@ class DataVM @Inject constructor(
         gyroDataFlow,
         accDataFlow,
         hrDataFlow,
-    ) { gyro, acc, hr ->
+        accDataFlowForeign
+    ) { gyro, acc, hr, accForeign ->
         if (hr != null ) {
             CombinedSensorData.HrData(hr)
         } else if (gyro != null) {
             CombinedSensorData.GyroData(gyro)
         } else if (acc != null) {
             CombinedSensorData.AccData(acc)
+        } else if (accForeign != null) {
+            CombinedSensorData.AccData(accForeign.toFloat())
         } else {
             null
         }

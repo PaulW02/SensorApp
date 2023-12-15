@@ -66,7 +66,7 @@ class AndroidPolarController (
 
     private val _accList = MutableStateFlow<List<Int>>(emptyList())
     override val accList: StateFlow<List<Int>>
-        get() = _hrList.asStateFlow()
+        get() = _accList.asStateFlow()
 
     private val _hrList = MutableStateFlow<List<Int>>(emptyList())
     override val hrList: StateFlow<List<Int>>
@@ -131,32 +131,26 @@ class AndroidPolarController (
     override fun startAccStreaming(deviceId: String) {
         val isDisposed = accDisposable?.isDisposed ?: true
         if (isDisposed) {
+            val settings = api.requestStreamSettings(deviceId, feature = PolarBleApi.PolarDeviceDataType.ACC)
             _measuring.update { true }
-            val settingsMap = mapOf(
-                PolarSensorSetting.SettingType.SAMPLE_RATE to 100,
-                PolarSensorSetting.SettingType.RESOLUTION to 1,    // Replace 1 with your desired resolution value
-                PolarSensorSetting.SettingType.RANGE to 4,
 
-                // Replace 4 with your desired range value
-                // Add other settings as required by your sensor SDK
-            )
 
-            val polarSensorSetting = PolarSensorSetting(settingsMap)
+            val polarSensorSetting = settings.blockingGet()
             accDisposable = api.startAccStreaming(deviceId, polarSensorSetting)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     { accData: PolarAccelerometerData ->
-                        Log.e("HEJ", " TEST " + accData.samples)
+                        //Log.e("HEJ", " TEST " + accData.samples)
                         for (sample in accData.samples) {
                             val accX = sample.x.toDouble()
                             val accY = sample.y.toDouble()
                             val accZ = sample.z.toDouble()
                             // Use the filtered linear acceleration values to calculate the tilt angle (x)
-                            val x = RAD_TO_DEG * atan2(accY, accZ).toInt()
-                            Log.e("LOOP", " LOOP " + x)
+                            val x = RAD_TO_DEG * atan2(accY, accZ)
+                            Log.e("LOGGG", "" + x + " ")
                             _currentAcc.update {x.toInt()}
                             _accList.update { accList ->
-                                accList + x.toInt()
+                                accList + sample.x
                             }
                         }
                     },
