@@ -30,17 +30,21 @@ class DataVM @Inject constructor(
 ): ViewModel() {
 
     private val gyroDataFlow = internalSensorController.currentGyroUI
+    private val accDataFlow = internalSensorController.currentLinAccUI
     private val hrDataFlow = polarController.currentHR
 
     // Combine the two data flows
     val combinedDataFlow= combine(
         gyroDataFlow,
+        accDataFlow,
         hrDataFlow,
-    ) { gyro, hr ->
+    ) { gyro, acc, hr ->
         if (hr != null ) {
             CombinedSensorData.HrData(hr)
         } else if (gyro != null) {
             CombinedSensorData.GyroData(gyro)
+        } else if (acc != null) {
+            CombinedSensorData.AccData(acc)
         } else {
             null
         }
@@ -92,9 +96,16 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = true) }
     }
 
+    fun startLinAcc() {
+        internalSensorController.startAccStream()
+        streamType = StreamType.LOCAL_ACC
+        _state.update { it.copy(measuring = true) }
+    }
+
     fun stopDataStream(){
         when (streamType) {
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
+            StreamType.LOCAL_ACC  -> internalSensorController.stopAccStream()
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
             else -> {} // Do nothing
         }
@@ -114,5 +125,6 @@ enum class StreamType {
 
 sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
+    data class AccData(val acc: Triple<Float, Float, Float>?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
 }

@@ -8,6 +8,7 @@ package mobappdev.example.sensorapplication.domain
  * Last modified: 2023-09-21
  */
 
+import android.hardware.SensorEvent
 import kotlinx.coroutines.flow.StateFlow
 
 interface InternalSensorController {
@@ -21,4 +22,9 @@ interface InternalSensorController {
 
     fun startGyroStream()
     fun stopGyroStream()
+
+    fun startAccStream()
+    fun stopAccStream()
+
+    fun onSensorChanged(event: SensorEvent)
 }
