@@ -24,6 +24,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mobappdev.example.sensorapplication.domain.InternalSensorController
+import kotlin.math.PI
+import kotlin.math.atan2
 import kotlin.math.pow
 
 private const val LOG_TAG = "Internal Sensor Controller"
@@ -33,12 +35,12 @@ class InternalSensorControllerImpl(
 ): InternalSensorController, SensorEventListener {
 
     // Expose acceleration to the UI
-    private val _currentLinAccUI = MutableStateFlow<Triple<Float, Float, Float>?>(null)
-    override val currentLinAccUI: StateFlow<Triple<Float, Float, Float>?>
+    private val _currentLinAccUI = MutableStateFlow<Float?>(null)
+    override val currentLinAccUI: StateFlow<Float?>
         get() = _currentLinAccUI.asStateFlow()
 
     private var _currentGyro: Triple<Float, Float, Float>? = null
-    private var _currentLinAcc: Triple<Float, Float, Float>? = null
+    private var _currentLinAcc: Float? = null
 
     // Expose gyro to the UI on a certain interval
     private val _currentGyroUI = MutableStateFlow<Triple<Float, Float, Float>?>(null)
@@ -59,20 +61,22 @@ class InternalSensorControllerImpl(
     }
 
     private val accSensor: Sensor? by lazy {
-        sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION)
+        sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     }
 
     private var velocityX = 0.0
     private var velocityY = 0.0
     private var velocityZ = 0.0
     private var totalRotationAngle = 0.0
+
     // Filtering parameters
     private val alpha = 0.8 // Complementary filter alpha value
-
+    private val ewmaFilter = EwmaFilter(alpha.toFloat())
     // Threshold for filtering small changes
     private val angleThreshold = 0.1 // Adjust as needed
     // Timestamp variable for calculating delta time
     private var lastTimestamp = 0L
+    private val RAD_TO_DEG = 180 / PI
 
     override fun startImuStream() {
         // Todo: implement
@@ -159,7 +163,7 @@ class InternalSensorControllerImpl(
             _currentGyro = Triple(event.values[0], event.values[1], event.values[2])
         }
 
-        if (event.sensor.type == Sensor.TYPE_LINEAR_ACCELERATION) {
+        if (event.sensor.type == Sensor.TYPE_ACCELEROMETER) {
             // Extract linear acceleration data (acceleration along X, Y, and Z axes)
             val accX = event.values[0]
             val accY = event.values[1]
@@ -170,29 +174,12 @@ class InternalSensorControllerImpl(
             val dt = (event.timestamp - lastTimestamp) * NS2S // Convert nanoseconds to seconds
             lastTimestamp = event.timestamp
 
-            // Apply a low-pass filter to reduce noise
-            velocityX = alpha * velocityX + (1 - alpha) * accX * dt
-            velocityY = alpha * velocityY + (1 - alpha) * accY * dt
-            velocityZ = alpha * velocityZ + (1 - alpha) * accZ * dt
 
-            // Calculate the total rotation angle by combining contributions from all axes
-            totalRotationAngle += Math.toDegrees(Math.sqrt(velocityX.pow(2) + velocityY.pow(2) + velocityZ.pow(2)))
+            // Use the filtered linear acceleration values to calculate the tilt angle (x)
+            val x = RAD_TO_DEG * atan2(accY, accZ)
 
-            // Wrap the angle within the range [0, 360)
-            totalRotationAngle %= 360.0
-
-            // Ensure that the angle is non-negative
-            if (totalRotationAngle < 0) {
-                totalRotationAngle += 360.0
-            }
-
-            // Apply a threshold to filter out small changes
-            if (totalRotationAngle < angleThreshold) {
-                totalRotationAngle = 0.0
-            }
-
-            // Update your UI or do further processing with the total rotation angle
-            _currentLinAccUI.update { Triple(totalRotationAngle.toFloat(), 0f, 0f) }
+            // Update your UI or do further processing with the calculated tilt angle (x)
+            _currentLinAccUI.update { x.toFloat() }
         }
     }
     companion object {

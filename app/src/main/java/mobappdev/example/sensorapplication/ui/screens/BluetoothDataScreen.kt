@@ -53,11 +53,11 @@ fun BluetoothDataScreen(
         }
         is CombinedSensorData.HrData -> combinedSensorData.hr.toString()
         is CombinedSensorData.AccData -> {
-            val triple = combinedSensorData.acc
-            if (triple == null) {
+            val value = combinedSensorData.acc
+            if (value == null) {
                 "---"
             } else {
-                String.format("%.1f, %.1f, %.1f", triple.first, triple.second, triple.third)
+                String.format("%.0f", value)
             }
 
         }

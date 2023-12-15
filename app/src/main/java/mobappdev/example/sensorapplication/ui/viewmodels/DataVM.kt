@@ -125,6 +125,6 @@ enum class StreamType {
 
 sealed class CombinedSensorData {
     data class GyroData(val gyro: Triple<Float, Float, Float>?) : CombinedSensorData()
-    data class AccData(val acc: Triple<Float, Float, Float>?) : CombinedSensorData()
+    data class AccData(val acc: Float?) : CombinedSensorData()
     data class HrData(val hr: Int?) : CombinedSensorData()
 }

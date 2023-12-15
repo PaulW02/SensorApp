@@ -12,7 +12,7 @@ import android.hardware.SensorEvent
 import kotlinx.coroutines.flow.StateFlow
 
 interface InternalSensorController {
-    val currentLinAccUI: StateFlow<Triple<Float, Float, Float>?>
+    val currentLinAccUI: StateFlow<Float?>
     val currentGyroUI: StateFlow<Triple<Float, Float, Float>?>
     val streamingGyro: StateFlow<Boolean>
     val streamingLinAcc: StateFlow<Boolean>
