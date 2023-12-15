@@ -15,6 +15,9 @@ interface PolarController {
     val currentHR: StateFlow<Int?>
     val hrList: StateFlow<List<Int>>
 
+    val currentAcc: StateFlow<Int?>
+    val accList: StateFlow<List<Int>>
+
     val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>
 
@@ -22,5 +25,8 @@ interface PolarController {
     fun disconnectFromDevice(deviceId: String)
 
     fun startHrStreaming(deviceId: String)
-    fun stopHrStreaming()
+    fun startAccStreaming(deviceId: String)
+
+     fun stopHrStreaming()
+     fun stopAccStreaming()
 }

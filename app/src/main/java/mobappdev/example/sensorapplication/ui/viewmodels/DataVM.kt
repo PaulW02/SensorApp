@@ -9,6 +9,8 @@ package mobappdev.example.sensorapplication.ui.viewmodels
  * Last modified: 2023-07-11
  */
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,6 +21,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import mobappdev.example.sensorapplication.data.AndroidPolarController
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
 import javax.inject.Inject
@@ -26,6 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class DataVM @Inject constructor(
     private val polarController: PolarController,
+
     private val internalSensorController: InternalSensorController
 ): ViewModel() {
 
@@ -33,6 +37,14 @@ class DataVM @Inject constructor(
     private val accDataFlow = internalSensorController.currentLinAccUI
     private val hrDataFlow = polarController.currentHR
 
+
+    private val _sensorConnected = MutableLiveData<Boolean>()
+    val sensorConnected: LiveData<Boolean>
+        get() = _sensorConnected
+
+    private val _sensorHRData = MutableLiveData<Int?>()
+    val sensorHRData: LiveData<Int?>
+        get() = _sensorHRData
     // Combine the two data flows
     val combinedDataFlow= combine(
         gyroDataFlow,
@@ -102,10 +114,18 @@ class DataVM @Inject constructor(
         _state.update { it.copy(measuring = true) }
     }
 
+    fun startForeignLinAcc() {
+        polarController.startAccStreaming(_deviceId.value)
+        streamType = StreamType.LOCAL_ACC
+        _state.update { it.copy(measuring = true) }
+    }
+
+
     fun stopDataStream(){
         when (streamType) {
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
             StreamType.LOCAL_ACC  -> internalSensorController.stopAccStream()
+            StreamType.FOREIGN_ACC  -> polarController.stopAccStreaming()
             StreamType.FOREIGN_HR -> polarController.stopHrStreaming()
             else -> {} // Do nothing
         }
@@ -120,7 +140,7 @@ data class DataUiState(
 )
 
 enum class StreamType {
-    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR
+    LOCAL_GYRO, LOCAL_ACC, FOREIGN_HR, FOREIGN_ACC
 }
 
 sealed class CombinedSensorData {

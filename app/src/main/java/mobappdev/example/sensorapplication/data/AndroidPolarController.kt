@@ -15,8 +15,10 @@ import com.polar.sdk.api.PolarBleApi
 import com.polar.sdk.api.PolarBleApiCallback
 import com.polar.sdk.api.PolarBleApiDefaultImpl
 import com.polar.sdk.api.errors.PolarInvalidArgument
+import com.polar.sdk.api.model.PolarAccelerometerData
 import com.polar.sdk.api.model.PolarDeviceInfo
 import com.polar.sdk.api.model.PolarHrData
+import com.polar.sdk.api.model.PolarSensorSetting
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.Disposable
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import mobappdev.example.sensorapplication.domain.PolarController
 import java.util.UUID
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.math.log
 
 class AndroidPolarController (
     private val context: Context,
@@ -48,11 +53,20 @@ class AndroidPolarController (
     }
 
     private var hrDisposable: Disposable? = null
+    private var accDisposable: Disposable? = null // Declare accDisposable for accelerometer stream
     private val TAG = "AndroidPolarController"
-
+    private val RAD_TO_DEG = 180 / PI
     private val _currentHR = MutableStateFlow<Int?>(null)
+    private val _currentAcc = MutableStateFlow<Int?>(null)
     override val currentHR: StateFlow<Int?>
         get() = _currentHR.asStateFlow()
+
+     override val currentAcc: StateFlow<Int?>
+        get() = _currentAcc.asStateFlow()
+
+    private val _accList = MutableStateFlow<List<Int>>(emptyList())
+    override val accList: StateFlow<List<Int>>
+        get() = _hrList.asStateFlow()
 
     private val _hrList = MutableStateFlow<List<Int>>(emptyList())
     override val hrList: StateFlow<List<Int>>
@@ -114,6 +128,53 @@ class AndroidPolarController (
             Log.e(TAG, "Failed to disconnect from $deviceId.\n Reason $polarInvalidArgument")
         }
     }
+    override fun startAccStreaming(deviceId: String) {
+        val isDisposed = accDisposable?.isDisposed ?: true
+        if (isDisposed) {
+            _measuring.update { true }
+            val settingsMap = mapOf(
+                PolarSensorSetting.SettingType.SAMPLE_RATE to 100,
+                PolarSensorSetting.SettingType.RESOLUTION to 1,    // Replace 1 with your desired resolution value
+                PolarSensorSetting.SettingType.RANGE to 4,
+
+                // Replace 4 with your desired range value
+                // Add other settings as required by your sensor SDK
+            )
+
+            val polarSensorSetting = PolarSensorSetting(settingsMap)
+            accDisposable = api.startAccStreaming(deviceId, polarSensorSetting)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    { accData: PolarAccelerometerData ->
+                        Log.e("HEJ", " TEST " + accData.samples)
+                        for (sample in accData.samples) {
+                            val accX = sample.x.toDouble()
+                            val accY = sample.y.toDouble()
+                            val accZ = sample.z.toDouble()
+                            // Use the filtered linear acceleration values to calculate the tilt angle (x)
+                            val x = RAD_TO_DEG * atan2(accY, accZ).toInt()
+                            Log.e("LOOP", " LOOP " + x)
+                            _currentAcc.update {x.toInt()}
+                            _accList.update { accList ->
+                                accList + x.toInt()
+                            }
+                        }
+                    },
+                    { error: Throwable ->
+                        Log.e(TAG, "Acc stream failed.\nReason $error")
+                    },
+                    { Log.d(TAG, "Acc stream complete") }
+                )
+        } else {
+            Log.d(TAG, "Already streaming")
+        }
+    }
+
+    override fun stopAccStreaming() {
+        _measuring.update { false }
+        accDisposable?.dispose()
+        _currentAcc.update { null }
+    }
 
     override fun startHrStreaming(deviceId: String) {
         val isDisposed = hrDisposable?.isDisposed ?: true
@@ -124,7 +185,9 @@ class AndroidPolarController (
                 .subscribe(
                     { hrData: PolarHrData ->
                         for (sample in hrData.samples) {
-                            _currentHR.update { sample.hr }
+                            _currentHR.update {
+                                sample.hr
+                            }
                             _hrList.update { hrList ->
                                 hrList + sample.hr
                             }

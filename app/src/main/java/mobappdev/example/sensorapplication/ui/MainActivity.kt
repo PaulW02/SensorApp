@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
     // Todo: Change for your own deviceID
     //private var deviceId = "20:39:56:49:60:A2"
     private var deviceId = "C07BD627"
+    //private var deviceId = "2021DJ1605"
     //private var deviceId = "M2444J0736027"
 
 

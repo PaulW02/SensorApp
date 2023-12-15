@@ -161,6 +161,16 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Stop\nstream")
             }
+            Button(
+                onClick = vm::startForeignLinAcc,
+                enabled = (!state.measuring),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    disabledContainerColor = Color.Gray
+                )
+            ) {
+                Text(text = "Start\nForeign LinAcc Stream")
+            }
         }
     }
 }
