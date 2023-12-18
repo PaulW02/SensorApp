@@ -35,7 +35,7 @@ import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
 
 @Composable
-fun BluetoothDataScreen(
+fun InternalDataScreen(
     vm: DataVM
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
@@ -82,32 +82,7 @@ fun BluetoothDataScreen(
                 color = Color.Black,
             )
         }
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceAround,
-            modifier = Modifier.fillMaxWidth()
-        ){
-            Button(
-                onClick = vm::connectToSensor,
-                enabled = !state.connected,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color.Gray
-                )
-            ) {
-                Text(text = "Connect\n${deviceId}")
-            }
-            Button(
-                onClick = vm::disconnectFromSensor,
-                enabled = state.connected,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color.Gray
-                )
-            ) {
-                Text(text = "Disconnect")
-            }
-        }
+
         Spacer(modifier = Modifier.height(10.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -115,24 +90,24 @@ fun BluetoothDataScreen(
             modifier = Modifier.fillMaxWidth()
         ){
             Button(
-                onClick = vm::startHr,
+                onClick = vm::startLinAcc,
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\nHr Stream")
+                Text(text = "Start\nLinAcc Stream")
             }
             Button(
-                onClick = vm::startForeignLinAcc,
+                onClick = vm::startGyro,
                 enabled = (!state.measuring),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\nForeign LinAcc Stream")
+                Text(text = "Start\nGyro Stream")
             }
         }
 
