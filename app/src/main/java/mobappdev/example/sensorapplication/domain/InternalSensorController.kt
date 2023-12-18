@@ -9,6 +9,7 @@ package mobappdev.example.sensorapplication.domain
  */
 
 import android.hardware.SensorEvent
+import androidx.lifecycle.LiveData
 import kotlinx.coroutines.flow.StateFlow
 
 interface InternalSensorController {
@@ -16,7 +17,6 @@ interface InternalSensorController {
     val currentGyroUI: StateFlow<Triple<Float, Float, Float>?>
     val streamingGyro: StateFlow<Boolean>
     val streamingLinAcc: StateFlow<Boolean>
-
     fun startImuStream()
     fun stopImuStream()
 

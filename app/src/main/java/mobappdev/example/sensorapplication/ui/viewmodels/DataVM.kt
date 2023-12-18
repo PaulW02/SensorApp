@@ -38,11 +38,13 @@ class DataVM @Inject constructor(
     private val accDataFlowForeign = polarController.currentAcc
     private val hrDataFlow = polarController.currentHR
 
+    private val _bluetoothDevices = MutableStateFlow<List<String>>(emptyList())
+    val bluetoothDevices: StateFlow<List<String>>
+        get() = _bluetoothDevices
 
     private val _sensorConnected = MutableLiveData<Boolean>()
     val sensorConnected: LiveData<Boolean>
         get() = _sensorConnected
-
     private val _sensorHRData = MutableLiveData<Int?>()
     val sensorHRData: LiveData<Int?>
         get() = _sensorHRData
@@ -85,6 +87,12 @@ class DataVM @Inject constructor(
     val deviceId: StateFlow<String>
         get() = _deviceId.asStateFlow()
 
+    fun updateBluetoothDevices(devices: List<String>) {
+        _bluetoothDevices.value = devices
+    }
+    fun startBluetoothDeviceDiscovery() {
+        polarController.startBluetoothDeviceDiscovery()
+    }
 
     fun chooseSensor(deviceId: String) {
         _deviceId.update { deviceId }

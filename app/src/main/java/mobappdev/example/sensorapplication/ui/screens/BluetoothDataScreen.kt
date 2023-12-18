@@ -8,6 +8,8 @@ package mobappdev.example.sensorapplication.ui.screens
  * Last modified: 2023-07-11
  */
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,6 +19,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +44,7 @@ fun BluetoothDataScreen(
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
+    val bluetoothDevices = vm.bluetoothDevices.collectAsState().value
 
     val value: String = when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
         is CombinedSensorData.GyroData -> {
@@ -51,6 +56,7 @@ fun BluetoothDataScreen(
             }
 
         }
+
         is CombinedSensorData.HrData -> combinedSensorData.hr.toString()
         is CombinedSensorData.AccData -> {
             val value = combinedSensorData.acc
@@ -61,6 +67,7 @@ fun BluetoothDataScreen(
             }
 
         }
+
         else -> "-"
     }
 
@@ -77,7 +84,7 @@ fun BluetoothDataScreen(
             modifier = Modifier.weight(1f)
         ) {
             Text(
-                text = if(state.measuring) value else "-",
+                text = if (state.measuring) value else "-",
                 fontSize = if (value.length < 3) 128.sp else 54.sp,
                 color = Color.Black,
             )
@@ -86,7 +93,7 @@ fun BluetoothDataScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier.fillMaxWidth()
-        ){
+        ) {
             Button(
                 onClick = vm::connectToSensor,
                 enabled = !state.connected,
@@ -113,7 +120,7 @@ fun BluetoothDataScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier.fillMaxWidth()
-        ){
+        ) {
             Button(
                 onClick = vm::startHr,
                 enabled = (!state.measuring),
@@ -140,7 +147,7 @@ fun BluetoothDataScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceAround,
             modifier = Modifier.fillMaxWidth()
-        ){
+        ) {
             Button(
                 onClick = vm::stopDataStream,
                 enabled = (state.measuring),
@@ -151,6 +158,50 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Stop\nstream")
             }
+
+            Column(
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Button(
+                    onClick = { vm.startBluetoothDeviceDiscovery() },
+                    modifier = Modifier.padding(bottom = 16.dp)
+                ) {
+                    Text("Start Device Discovery")
+                }
+
+                LazyColumn {
+                    items(bluetoothDevices) { device ->
+                        DeviceListItem(
+
+                            device = bluetoothDevices[1],
+                            selectedDeviceId = deviceId,
+                            onClick = { vm.chooseSensor(device) }
+                        )
+                    }
+                }
+            }
         }
     }
 }
+    @Composable
+    fun DeviceListItem(
+        device: String,
+        selectedDeviceId: String,
+        onClick: () -> Unit
+    ) {
+        val isSelected = device == selectedDeviceId
+
+        // Customize the appearance based on selection
+        val backgroundColor = if (isSelected) Color.LightGray else Color.Transparent
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onClick() }
+                .background(color = backgroundColor)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = device)
+        }
+    }

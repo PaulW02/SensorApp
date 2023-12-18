@@ -9,6 +9,7 @@ package mobappdev.example.sensorapplication.domain
  */
 
 
+import androidx.lifecycle.LiveData
 import kotlinx.coroutines.flow.StateFlow
 
 interface PolarController {
@@ -20,6 +21,7 @@ interface PolarController {
 
     val connected: StateFlow<Boolean>
     val measuring: StateFlow<Boolean>
+    val bluetoothDevices: LiveData<List<String>>
 
     fun connectToDevice(deviceId: String)
     fun disconnectFromDevice(deviceId: String)
@@ -29,4 +31,6 @@ interface PolarController {
 
      fun stopHrStreaming()
      fun stopAccStreaming()
+    fun stopBluetoothDeviceDiscovery()
+    fun startBluetoothDeviceDiscovery()
 }
