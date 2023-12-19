@@ -222,9 +222,9 @@ class AndroidPolarController (
                             val x = RAD_TO_DEG * atan2(accY, accZ)
                             Log.e("LOGGG", "" + x + " ")
                             _currentAcc.update {x.toFloat()}
-                            _accList.update { accList ->
+                            /*_accList.update { accList ->
                                 accList + sample.x
-                            }
+                            }*/
                         }
                     },
                     { error: Throwable ->
@@ -239,6 +239,7 @@ class AndroidPolarController (
 
     override fun stopAccStreaming() {
         _measuring.update { false }
+        Log.e("TEST", "DONEEE ")
         accDisposable?.dispose()
         _currentAcc.update { null }
     }

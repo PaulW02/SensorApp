@@ -11,6 +11,7 @@ package mobappdev.example.sensorapplication.ui.viewmodels
 
 import android.app.Application
 import android.os.CountDownTimer
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -123,7 +124,7 @@ class DataVM @Inject constructor(
     }
     fun startTimer(streamType: StreamType?) {
         _angleList.clear()
-        timer = object : CountDownTimer(10000, 500) {
+        timer = object : CountDownTimer(10000, 20) {
             override fun onTick(millisUntilFinished: Long) {
                 _elapsedTime.value = 10000 - millisUntilFinished
                 var currentAngle = internalSensorController.currentLinAccUI
@@ -139,6 +140,7 @@ class DataVM @Inject constructor(
                     onFinish()
                 }
             }
+
 
             override fun onFinish() {
                 _timerFinished.value = true
@@ -207,12 +209,14 @@ class DataVM @Inject constructor(
 
     fun startForeignLinAcc() {
         polarController.startAccStreaming(_deviceId.value)
-        streamType = StreamType.LOCAL_ACC
+        streamType = StreamType.FOREIGN_ACC
+        startTimer(streamType)
         _state.update { it.copy(measuring = true) }
     }
 
 
     fun stopDataStream(){
+        Log.e("ACC", " test " + streamType.toString());
         when (streamType) {
             StreamType.LOCAL_GYRO -> internalSensorController.stopGyroStream()
             StreamType.LOCAL_ACC  -> internalSensorController.stopAccStream()

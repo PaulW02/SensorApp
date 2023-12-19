@@ -64,7 +64,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             SensorapplicationTheme {
                 val dataVM = hiltViewModel<DataVM>()
-                dataVM.chooseSensor(deviceId)
 
                 // A surface container using the 'background' color from the theme
                 Surface(

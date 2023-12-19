@@ -48,7 +48,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFileController(@ApplicationContext context: Context, internalSensorController: InternalSensorController, polarController: PolarController): FileController {
+    fun provideFileController(@ApplicationContext context: Context): FileController {
         return FileControllerImpl(context)
     }
 }

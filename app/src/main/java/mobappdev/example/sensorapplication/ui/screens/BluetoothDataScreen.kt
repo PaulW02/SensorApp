@@ -190,15 +190,6 @@ fun BluetoothDataScreen(
                         },
                         onDismiss = { isPopupVisible = false }
                     )
-                LazyColumn {
-                    items(bluetoothDevices) { device ->
-                        DeviceListItem(
-
-                            device = device,
-                            selectedDeviceId = deviceId,
-                            onClick = { vm.chooseSensor(device) }
-                        )
-                    }
                 }
             }
         }
