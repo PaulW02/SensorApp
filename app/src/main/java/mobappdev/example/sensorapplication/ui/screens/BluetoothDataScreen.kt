@@ -173,7 +173,7 @@ fun BluetoothDataScreen(
                     items(bluetoothDevices) { device ->
                         DeviceListItem(
 
-                            device = bluetoothDevices[1],
+                            device = device,
                             selectedDeviceId = deviceId,
                             onClick = { vm.chooseSensor(device) }
                         )

@@ -64,16 +64,6 @@ class InternalSensorControllerImpl(
         sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     }
 
-    private var velocityX = 0.0
-    private var velocityY = 0.0
-    private var velocityZ = 0.0
-    private var totalRotationAngle = 0.0
-
-    // Filtering parameters
-    private val alpha = 0.8 // Complementary filter alpha value
-    private val ewmaFilter = EwmaFilter(alpha.toFloat())
-    // Threshold for filtering small changes
-    private val angleThreshold = 0.1 // Adjust as needed
     // Timestamp variable for calculating delta time
     private var lastTimestamp = 0L
     private val RAD_TO_DEG = 180 / PI

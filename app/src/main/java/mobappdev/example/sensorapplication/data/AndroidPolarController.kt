@@ -10,8 +10,10 @@ package mobappdev.example.sensorapplication.data
  */
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -19,6 +21,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.util.Log
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.polar.sdk.api.PolarBleApi
@@ -67,11 +70,11 @@ class AndroidPolarController (
     private val TAG = "AndroidPolarController"
     private val RAD_TO_DEG = 180 / PI
     private val _currentHR = MutableStateFlow<Int?>(null)
-    private val _currentAcc = MutableStateFlow<Int?>(null)
+    private val _currentAcc = MutableStateFlow<Float?>(null)
     override val currentHR: StateFlow<Int?>
         get() = _currentHR.asStateFlow()
 
-     override val currentAcc: StateFlow<Int?>
+     override val currentAcc: StateFlow<Float?>
         get() = _currentAcc.asStateFlow()
 
     private val _accList = MutableStateFlow<List<Int>>(emptyList())
@@ -90,35 +93,33 @@ class AndroidPolarController (
     override val measuring: StateFlow<Boolean>
         get() = _measuring.asStateFlow()
 
-    private val bluetoothAdapter: BluetoothAdapter? by lazy {
-        BluetoothAdapter.getDefaultAdapter()
-    }
+    val bluetoothManager: BluetoothManager? = getSystemService(context, BluetoothManager::class.java)
+    val bluetoothAdapter: BluetoothAdapter? = bluetoothManager?.getAdapter()
 
     private val _bluetoothDevices = MutableLiveData<List<String>>() // Device IDs as strings
-   override val bluetoothDevices: LiveData<List<String>>
+    override val bluetoothDevices: LiveData<List<String>>
         get() = _bluetoothDevices
 
-   private  val bluetoothReceiver = object : BroadcastReceiver() {
+
+    private val bluetoothReceiver = object : BroadcastReceiver() {
+
+        @SuppressLint("MissingPermission")
         override fun onReceive(context: Context, intent: Intent) {
-            when (intent.action) {
+            val action: String? = intent.action
+            when(action) {
                 BluetoothDevice.ACTION_FOUND -> {
+                    // Discovery has found a device. Get the BluetoothDevice
+                    // object and its info from the Intent.
                     val device: BluetoothDevice? =
                         intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                    device?.let {
-                        val updatedList = _bluetoothDevices.value.orEmpty().toMutableList()
-                        if (!updatedList.contains(device.address)) {
-                            updatedList.add(device.address) // Add device ID (address)
-                            _bluetoothDevices.postValue(updatedList)
-                        }
-                    }
+                    val deviceName = device?.name
+                    val deviceHardwareAddress = device?.address // MAC address
                 }
             }
         }
     }
-    init {
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        context.registerReceiver(bluetoothReceiver, filter)
 
+    init {
         api.setPolarFilter(false)
 
         val enableSdkLogs = false
@@ -151,6 +152,8 @@ class AndroidPolarController (
         })
     }
    override fun startBluetoothDeviceDiscovery() {
+       val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+       context.registerReceiver(bluetoothReceiver, filter)
 /*        if (ActivityCompat.checkSelfPermission(
                 context,
                 Manifest.permission.BLUETOOTH_SCAN
@@ -159,7 +162,16 @@ class AndroidPolarController (
 
             return
         }*/
-        bluetoothAdapter?.startDiscovery()
+
+       if (ActivityCompat.checkSelfPermission(
+               this.context,
+               Manifest.permission.BLUETOOTH_SCAN
+           ) == PackageManager.PERMISSION_GRANTED
+       ) {
+       } else {
+       }
+       Log.e("TEST", "EHELLO");
+       bluetoothAdapter?.startDiscovery()
     }
 
    override fun stopBluetoothDeviceDiscovery() {
@@ -209,7 +221,7 @@ class AndroidPolarController (
                             // Use the filtered linear acceleration values to calculate the tilt angle (x)
                             val x = RAD_TO_DEG * atan2(accY, accZ)
                             Log.e("LOGGG", "" + x + " ")
-                            _currentAcc.update {x.toInt()}
+                            _currentAcc.update {x.toFloat()}
                             _accList.update { accList ->
                                 accList + sample.x
                             }

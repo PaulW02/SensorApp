@@ -36,6 +36,7 @@ import mobappdev.example.sensorapplication.ui.screens.BluetoothDataScreen
 import mobappdev.example.sensorapplication.ui.screens.InternalDataScreen
 import mobappdev.example.sensorapplication.ui.theme.SensorapplicationTheme
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
@@ -131,6 +132,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+
     private sealed class Screen(val route: String) {
         object Blank : Screen("blank")
         object Bluetooth : Screen("bluetooth")

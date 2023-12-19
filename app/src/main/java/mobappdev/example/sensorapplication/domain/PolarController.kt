@@ -16,7 +16,7 @@ interface PolarController {
     val currentHR: StateFlow<Int?>
     val hrList: StateFlow<List<Int>>
 
-    val currentAcc: StateFlow<Int?>
+    val currentAcc: StateFlow<Float?>
     val accList: StateFlow<List<Int>>
 
     val connected: StateFlow<Boolean>
