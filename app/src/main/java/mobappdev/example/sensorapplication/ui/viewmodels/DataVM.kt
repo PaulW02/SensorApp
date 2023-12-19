@@ -23,6 +23,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import mobappdev.example.sensorapplication.data.AndroidPolarController
+import mobappdev.example.sensorapplication.data.BluetoothController
+import mobappdev.example.sensorapplication.domain.IBluetoothController
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
 import javax.inject.Inject
@@ -35,6 +38,7 @@ import mobappdev.example.sensorapplication.domain.FileController
 class DataVM @Inject constructor(
     private val application: Application,
     private val polarController: PolarController,
+    private val bluetoothController: IBluetoothController,
     private val internalSensorController: InternalSensorController,
     private val fileController: FileController
 ): ViewModel() {
@@ -44,9 +48,8 @@ class DataVM @Inject constructor(
     private val accDataFlowForeign = polarController.currentAcc
     private val hrDataFlow = polarController.currentHR
 
-    private val _bluetoothDevices = MutableStateFlow<List<String>>(emptyList())
-    val bluetoothDevices: StateFlow<List<String>>
-        get() = _bluetoothDevices
+    private val _bluetoothDevices = MutableLiveData<List<String>>()
+    val bluetoothDevices: LiveData<List<String>> = _bluetoothDevices
 
     private val _sensorConnected = MutableLiveData<Boolean>()
     val sensorConnected: LiveData<Boolean>
@@ -87,9 +90,14 @@ class DataVM @Inject constructor(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), _state.value)
 
     private var streamType: StreamType? = null
-
+    init {
+        bluetoothController.bluetoothDevices.observeForever { devices ->
+            _bluetoothDevices.postValue(devices)
+        }
+    }
 
     private val _deviceId = MutableStateFlow("")
+
     val deviceId: StateFlow<String>
         get() = _deviceId.asStateFlow()
 
@@ -147,9 +155,23 @@ class DataVM @Inject constructor(
         _bluetoothDevices.value = devices
     }
     fun startBluetoothDeviceDiscovery() {
-        polarController.startBluetoothDeviceDiscovery()
+        bluetoothController.startBluetoothDeviceDiscovery()
+        bluetoothController.bluetoothDevices.observeForever { devices ->
+            _bluetoothDevices.postValue(devices)
+        }
     }
 
+    fun setDeviceId(deviceId: String) {
+        val parts = deviceId.split(" ")
+        val extractedPart = parts.getOrNull(2)
+        if (extractedPart != null) {
+            _deviceId.value = extractedPart
+        }
+    }
+    fun stopBluetoothDeviceDiscovery()
+    {
+        bluetoothController.stopBluetoothDeviceDiscovery()
+    }
     fun chooseSensor(deviceId: String) {
         _deviceId.update { deviceId }
     }

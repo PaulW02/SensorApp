@@ -16,8 +16,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import mobappdev.example.sensorapplication.data.AndroidPolarController
 import mobappdev.example.sensorapplication.data.FileControllerImpl
+import mobappdev.example.sensorapplication.data.BluetoothController
 import mobappdev.example.sensorapplication.data.InternalSensorControllerImpl
 import mobappdev.example.sensorapplication.domain.FileController
+import mobappdev.example.sensorapplication.domain.IBluetoothController
 import mobappdev.example.sensorapplication.domain.InternalSensorController
 import mobappdev.example.sensorapplication.domain.PolarController
 import javax.inject.Singleton
@@ -36,6 +38,12 @@ object AppModule {
     @Singleton
     fun provideInternalSensorController(@ApplicationContext context: Context): InternalSensorController {
         return InternalSensorControllerImpl(context)
+    }
+    @Provides
+    @Singleton
+    fun provideBluetoothController(@ApplicationContext context: Context): IBluetoothController
+    {
+        return BluetoothController(context)
     }
 
     @Provides
