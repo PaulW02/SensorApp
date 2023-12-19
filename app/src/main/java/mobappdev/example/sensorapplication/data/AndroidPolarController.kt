@@ -219,8 +219,11 @@ class AndroidPolarController (
                             val accY = sample.y.toDouble()
                             val accZ = sample.z.toDouble()
                             // Use the filtered linear acceleration values to calculate the tilt angle (x)
-                            val x = RAD_TO_DEG * atan2(accY, accZ)
+                            var x = RAD_TO_DEG * atan2(accY, accZ)
                             Log.e("LOGGG", "" + x + " ")
+                            if (x < 0){
+                                x = -x
+                            }
                             _currentAcc.update {x.toFloat()}
                             /*_accList.update { accList ->
                                 accList + sample.x

@@ -97,17 +97,7 @@ fun InternalDataScreen(
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\nLinAcc Stream")
-            }
-            Button(
-                onClick = vm::startGyro,
-                enabled = (!state.measuring),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    disabledContainerColor = Color.Gray
-                )
-            ) {
-                Text(text = "Start\nGyro Stream")
+                Text(text = "Start LinAcc Stream")
             }
         }
 

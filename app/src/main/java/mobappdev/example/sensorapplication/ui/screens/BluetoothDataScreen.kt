@@ -152,7 +152,7 @@ fun BluetoothDataScreen(
                     disabledContainerColor = Color.Gray
                 )
             ) {
-                Text(text = "Start\nForeign LinAcc Stream")
+                Text(text = "Start LinAcc Stream")
             }
         }
 

@@ -77,7 +77,7 @@ class MainActivity : ComponentActivity() {
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .padding(bottom = 100.dp) // Adjust the padding as needed
+                                    .padding(bottom = 150.dp) // Adjust the padding as needed
                             ) {
                                 NavHost(navController, startDestination = Screen.Bluetooth.route) {
                                     composable(Screen.Bluetooth.route) { BluetoothDataScreen(vm = dataVM) }

@@ -157,10 +157,10 @@ class DataVM @Inject constructor(
         _bluetoothDevices.value = devices
     }
     fun startBluetoothDeviceDiscovery() {
-        bluetoothController.startBluetoothDeviceDiscovery()
         bluetoothController.bluetoothDevices.observeForever { devices ->
             _bluetoothDevices.postValue(devices)
         }
+        bluetoothController.startBluetoothDeviceDiscovery()
     }
 
     fun setDeviceId(deviceId: String) {
