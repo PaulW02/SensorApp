@@ -10,6 +10,7 @@ package mobappdev.example.sensorapplication.data
  */
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.BroadcastReceiver
@@ -90,37 +91,7 @@ class AndroidPolarController (
     override val measuring: StateFlow<Boolean>
         get() = _measuring.asStateFlow()
 
-    private val bluetoothAdapter: BluetoothAdapter? by lazy {
-        BluetoothAdapter.getDefaultAdapter()
-    }
-
-    private val _bluetoothDevices = MutableLiveData<List<String>>() // Device IDs as strings
-   override val bluetoothDevices: LiveData<List<String>>
-        get() = _bluetoothDevices
-
-   private  val bluetoothReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when (intent.action) {
-                BluetoothDevice.ACTION_FOUND -> {
-                    val device: BluetoothDevice? =
-                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                    device?.let {
-                        val updatedList = _bluetoothDevices.value.orEmpty().toMutableList()
-                        if (!updatedList.contains(device.address)) {
-                            updatedList.add(device.address) // Add device ID (address)
-                            _bluetoothDevices.postValue(updatedList)
-                        }
-                    }
-                }
-            }
-        }
-    }
     init {
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        context.registerReceiver(bluetoothReceiver, filter)
-
-        api.setPolarFilter(false)
-
         val enableSdkLogs = false
         if(enableSdkLogs) {
             api.setApiLogger { s: String -> Log.d("Polar API Logger", s) }
@@ -149,30 +120,6 @@ class AndroidPolarController (
                 Log.d(TAG, "DIS INFO uuid: $uuid value: $value")
             }
         })
-    }
-   override fun startBluetoothDeviceDiscovery() {
-/*        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            return
-        }*/
-        bluetoothAdapter?.startDiscovery()
-    }
-
-   override fun stopBluetoothDeviceDiscovery() {
-        context.unregisterReceiver(bluetoothReceiver)
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.BLUETOOTH_SCAN
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            return
-        }
-        bluetoothAdapter?.cancelDiscovery()
     }
     override fun connectToDevice(deviceId: String) {
         try {

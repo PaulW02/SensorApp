@@ -13,20 +13,29 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
@@ -34,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import mobappdev.example.sensorapplication.ui.viewmodels.CombinedSensorData
 import mobappdev.example.sensorapplication.ui.viewmodels.DataVM
@@ -44,7 +55,9 @@ fun BluetoothDataScreen(
 ) {
     val state = vm.state.collectAsStateWithLifecycle().value
     val deviceId = vm.deviceId.collectAsStateWithLifecycle().value
-    val bluetoothDevices = vm.bluetoothDevices.collectAsState().value
+    val bluetoothDevices = vm.bluetoothDevices.value ?: emptyList()
+    var isPopupVisible by remember { mutableStateOf(false) }
+    var selectedDeviceId by remember { mutableStateOf("") }
 
     val value: String = when (val combinedSensorData = vm.combinedDataFlow.collectAsState().value) {
         is CombinedSensorData.GyroData -> {
@@ -158,50 +171,61 @@ fun BluetoothDataScreen(
             ) {
                 Text(text = "Stop\nstream")
             }
+            Column {
 
-            Column(
-                modifier = Modifier.padding(16.dp)
-            ) {
                 Button(
-                    onClick = { vm.startBluetoothDeviceDiscovery() },
+                    onClick = { isPopupVisible = true },
                     modifier = Modifier.padding(bottom = 16.dp)
                 ) {
                     Text("Start Device Discovery")
                 }
 
-                LazyColumn {
-                    items(bluetoothDevices) { device ->
-                        DeviceListItem(
-
-                            device = bluetoothDevices[1],
-                            selectedDeviceId = deviceId,
-                            onClick = { vm.chooseSensor(device) }
-                        )
-                    }
+                if (isPopupVisible) {
+                    vm.startBluetoothDeviceDiscovery()
+                    BluetoothDevicesPopup(
+                        bluetoothDevices = bluetoothDevices,
+                        onDeviceSelected = {
+                            vm.setDeviceId(it.toString())
+                            isPopupVisible = false // Close the popup on device selection
+                        },
+                        onDismiss = { isPopupVisible = false }
+                    )
                 }
             }
         }
     }
 }
-    @Composable
-    fun DeviceListItem(
-        device: String,
-        selectedDeviceId: String,
-        onClick: () -> Unit
+@Composable
+fun BluetoothDevicesPopup(
+    bluetoothDevices: List<String>,
+    onDeviceSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismiss
     ) {
-        val isSelected = device == selectedDeviceId
-
-        // Customize the appearance based on selection
-        val backgroundColor = if (isSelected) Color.LightGray else Color.Transparent
-
-        Row(
+        Surface(
             modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onClick() }
-                .background(color = backgroundColor)
+                .width(IntrinsicSize.Max)
+                .height(IntrinsicSize.Max)
                 .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            shape = MaterialTheme.shapes.medium,
         ) {
-            Text(text = device)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                bluetoothDevices.forEach { device ->
+                    Text(
+                        text = device,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onDeviceSelected(device) }
+                            .padding(vertical = 8.dp)
+                    )
+                }
+            }
         }
     }
+}
